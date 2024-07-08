@@ -1,33 +1,38 @@
 use anyhow::{anyhow, Result};
 use error::ConfigResult;
-use log::error;
+use serde::{Deserialize, Serialize};
 use std::{
     fs::{File, OpenOptions},
     io::{Read, Write},
     path::{Path, PathBuf},
 };
-use types::{CoreConfig, RConfig, VConfig};
+use types::{CoreConfig, VenusConfig};
 
-use crate::consts::{NAME, VERSION};
+use crate::consts::VERSION;
 
 pub mod error;
 pub mod types;
 
-/// Core config and global stats
-/// The rua field is self state and
-/// frontend global state.
-/// When rua config changed, need to
-/// notify frontend to update global state.
-impl VConfig {
-    pub fn new() -> Self {
-        let r_config = RConfig::default();
+/// All config field
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Config {
+    /// Core config from `config.json`
+    pub core: Option<CoreConfig>,
+    pub venus: VenusConfig,
+}
 
-        Self {
+/// Core config and global states
+impl Config {
+    pub fn new() -> ConfigResult<Self> {
+        let v_config = VenusConfig::default();
+
+        let config = Self {
             core: None,
-            rua: r_config,
-            rua_path: PathBuf::new(),
-            core_path: PathBuf::new(),
-        }
+            venus: v_config,
+        };
+
+        Ok(config)
     }
 
     /// Re-read config from file
@@ -38,24 +43,6 @@ impl VConfig {
     pub fn init(&mut self, resource_path: &Path) -> ConfigResult<()> {
         let mut core_default = PathBuf::from(resource_path);
         core_default.push("config.json");
-
-        let home = home::home_dir()
-            .map(|path| {
-                let mut path = path;
-                path.push(format!(".config/{}", NAME));
-                path
-            })
-            .unwrap_or_else(|| {
-                error!("cannot detect user home folder, use /usr/local instead");
-                PathBuf::from(format!("/usr/local/{}", NAME))
-            });
-        let mut core_path = PathBuf::from(&home);
-        core_path.push("config.json");
-        let mut rua_path = PathBuf::from(&home);
-        rua_path.push("config.toml");
-
-        self.core_path = core_path;
-        self.rua_path = rua_path;
 
         /* detect_and_create(&core_path, core_default)?;
         if !rua_path.exists() {
@@ -72,18 +59,18 @@ impl VConfig {
 
     /// Reload core and rua config from file
     pub fn reload(&mut self) -> ConfigResult<()> {
-        self.reload_core()?;
-        self.reload_rua()?;
+        /* self.reload_core()?;
+        self.reload_rua()?; */
         Ok(())
     }
-
+    /*
     pub fn reload_rua(&mut self) -> ConfigResult<()> {
         let mut config_file = File::open(&self.rua_path)?;
         let mut buffer = String::new();
         config_file.read_to_string(&mut buffer)?;
-        let mut rua_config = toml::from_str::<RConfig>(&buffer)?;
+        let mut rua_config = toml::from_str::<VenusConfig>(&buffer)?;
         rua_config.version = VERSION.into();
-        self.rua = rua_config;
+        self.venus = rua_config;
         Ok(())
     }
 
@@ -110,9 +97,9 @@ impl VConfig {
             .create(true)
             .truncate(true)
             .open(&self.rua_path)?;
-        let rua_string = toml::to_string(&self.rua)?;
+        let rua_string = toml::to_string(&self.venus)?;
         rua_file.set_len(0)?;
         rua_file.write_all(rua_string.as_bytes())?;
         Ok(())
-    }
+    } */
 }

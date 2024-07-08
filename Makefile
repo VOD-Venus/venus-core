@@ -14,7 +14,7 @@ build-release: clean
 	$(CARGO) build --release
 
 dev:
-	CANDY_LOG=debug $(CARGO) watch -x run
+	$(CARGO) watch -x run
 
 # Run the project
 run:
@@ -22,6 +22,8 @@ run:
 
 # Test the project
 test:
+	VENUS_CONFIG="./config.toml"
+	VENUS_V2RAY_CONFIG="./config.json"
 	$(CARGO) test
 
 # Clean the project

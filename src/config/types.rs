@@ -15,15 +15,14 @@ pub struct Subscription {
 /// RUA config and frontend global state
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct RConfig {
+pub struct VenusConfig {
     pub version: Cow<'static, str>,
-    /// Subscriptions
     pub subscriptions: Vec<Subscription>,
     pub settings: RUABasicSetting,
 }
-impl Default for RConfig {
+impl Default for VenusConfig {
     fn default() -> Self {
-        RConfig {
+        VenusConfig {
             version: VERSION.into(),
             subscriptions: vec![],
             settings: RUABasicSetting::default(),
@@ -49,17 +48,6 @@ impl Default for RUABasicSetting {
             logging: false,
         }
     }
-}
-
-/// All config field
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VConfig {
-    /// Core config from `config.json`
-    pub core: Option<CoreConfig>,
-    pub core_path: PathBuf,
-    pub rua: RConfig,
-    pub rua_path: PathBuf,
 }
 
 /// Subscription nodes
