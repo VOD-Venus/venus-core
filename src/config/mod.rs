@@ -1,5 +1,4 @@
-use anyhow::{anyhow, Result};
-use error::ConfigResult;
+use error::{ConfigError, ConfigResult};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{File, OpenOptions},
@@ -8,7 +7,7 @@ use std::{
 };
 use types::{CoreConfig, VenusConfig};
 
-use crate::consts::VERSION;
+use crate::consts::{get_v2ray_config_path, get_venus_config_path, VERSION};
 
 pub mod error;
 pub mod types;
@@ -35,37 +34,9 @@ impl Config {
         Ok(config)
     }
 
-    /// Re-read config from file
-    ///
-    /// ## Arguments
-    ///
-    /// `resource_path`: the store path of `config.json` and `config.toml`
-    pub fn init(&mut self, resource_path: &Path) -> ConfigResult<()> {
-        let mut core_default = PathBuf::from(resource_path);
-        core_default.push("config.json");
-
-        /* detect_and_create(&core_path, core_default)?;
-        if !rua_path.exists() {
-            self.write_rua()?;
-        } */
-
-        self.reload()?;
-
-        /* if self.rua.logging {
-            LOGGING.store(true, Ordering::Relaxed);
-        } */
-        Ok(())
-    }
-
-    /// Reload core and rua config from file
-    pub fn reload(&mut self) -> ConfigResult<()> {
-        /* self.reload_core()?;
-        self.reload_rua()?; */
-        Ok(())
-    }
-    /*
     pub fn reload_rua(&mut self) -> ConfigResult<()> {
-        let mut config_file = File::open(&self.rua_path)?;
+        let path = PathBuf::from(get_venus_config_path().as_ref());
+        let mut config_file = File::open(path)?;
         let mut buffer = String::new();
         config_file.read_to_string(&mut buffer)?;
         let mut rua_config = toml::from_str::<VenusConfig>(&buffer)?;
@@ -76,30 +47,36 @@ impl Config {
 
     /// Reload core config file from VConfig
     pub fn reload_core(&mut self) -> ConfigResult<()> {
-        let core_file = File::open(&self.core_path)?;
+        let path = PathBuf::from(get_v2ray_config_path().as_ref());
+        let core_file = File::open(path)?;
         let core_config: CoreConfig = serde_json::from_reader(core_file)?;
         self.core = Some(core_config);
         Ok(())
     }
 
     ///  Write core config to config file
-    pub fn write_core(&mut self) -> Result<()> {
-        let config = self.core.as_ref().ok_or(anyhow!("core config is empty"))?;
-        let core_file = OpenOptions::new().write(true).open(&self.core_path)?;
+    pub fn write_core(&mut self) -> ConfigResult<()> {
+        let path = PathBuf::from(get_v2ray_config_path().as_ref());
+        let config = self
+            .core
+            .as_ref()
+            .ok_or(ConfigError::Empty("v2ray core config is empty".into()))?;
+        let core_file = OpenOptions::new().write(true).open(path)?;
         core_file.set_len(0)?;
         serde_json::to_writer_pretty(&core_file, &config)?;
         Ok(())
     }
 
-    pub fn write_rua(&mut self) -> Result<()> {
+    pub fn write_rua(&mut self) -> ConfigResult<()> {
+        let path = PathBuf::from(get_venus_config_path().as_ref());
         let mut rua_file = OpenOptions::new()
             .write(true)
             .create(true)
             .truncate(true)
-            .open(&self.rua_path)?;
+            .open(path)?;
         let rua_string = toml::to_string(&self.venus)?;
         rua_file.set_len(0)?;
         rua_file.write_all(rua_string.as_bytes())?;
         Ok(())
-    } */
+    }
 }

@@ -15,6 +15,7 @@ pub struct Venus {
 
 impl Venus {
     fn new() -> VenusResult<Self> {
+        let config = Config::new()?;
         todo!()
     }
 }
