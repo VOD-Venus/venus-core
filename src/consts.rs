@@ -1,6 +1,6 @@
 use std::{borrow::Cow, env, sync::OnceLock};
 
-use log::error;
+use log::warn;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const NAME: &str = env!("CARGO_PKG_NAME");
@@ -13,7 +13,7 @@ pub fn get_venus_config_path() -> &'static Cow<'static, str> {
     VENUS_CONFIG_PATH.get_or_init(|| match env::var("VENUS_CONFIG") {
         Ok(var) => var.into(),
         Err(err) => {
-            error!("read VENUS_CONFIG_PATH failed {err}");
+            warn!("VENUS_CONFIG env not specified: {err}. using default location {DEFAULT_VENUS_CONFIG_PATH}");
             DEFAULT_VENUS_CONFIG_PATH.into()
         }
     })
@@ -27,7 +27,7 @@ pub fn get_v2ray_config_path() -> &'static Cow<'static, str> {
     V2RAY_CONFIG_PATH.get_or_init(|| match env::var("VENUS_V2RAY_CONFIG") {
         Ok(var) => var.into(),
         Err(err) => {
-            error!("read VENUS_CONFIG_PATH failed {err}");
+            warn!("VENUS_V2RAY_CONFIG env not specified: {err}. using default localtion {DEFAULT_V2RAY_CONFIG_PATH}");
             DEFAULT_V2RAY_CONFIG_PATH.into()
         }
     })

@@ -10,13 +10,13 @@ pub mod error;
 #[serde(rename_all = "camelCase")]
 pub struct Venus {
     /// v2ray and venus's self config
-    config: Config,
+    pub config: Config,
 }
 
 impl Venus {
-    fn new() -> VenusResult<Self> {
+    pub fn new() -> VenusResult<Self> {
         let config = Config::new()?;
-        todo!()
+        Ok(Self { config })
     }
 }
 

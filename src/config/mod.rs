@@ -1,9 +1,10 @@
 use error::{ConfigError, ConfigResult};
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{File, OpenOptions},
     io::{Read, Write},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 use types::{CoreConfig, VenusConfig};
 
@@ -36,6 +37,11 @@ impl Config {
 
     pub fn reload_rua(&mut self) -> ConfigResult<()> {
         let path = PathBuf::from(get_venus_config_path().as_ref());
+        if !path.exists() {
+            info!("venus config file not exist, creating default");
+            self.write_rua()?;
+            return Ok(());
+        }
         let mut config_file = File::open(path)?;
         let mut buffer = String::new();
         config_file.read_to_string(&mut buffer)?;
