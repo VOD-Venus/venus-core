@@ -32,3 +32,22 @@ pub fn get_v2ray_config_path() -> &'static Cow<'static, str> {
         }
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_venus_config_path() {
+        env::set_var("VENUS_CONFIG", "./config/config.toml");
+        let venus_path = get_venus_config_path();
+        assert_eq!("./config/config.toml", venus_path);
+    }
+
+    #[test]
+    fn test_get_v2ray_config_path() {
+        env::set_var("VENUS_V2RAY_CONFIG", "./config/config.json");
+        let venus_path = get_v2ray_config_path();
+        assert_eq!("./config/config.json", venus_path);
+    }
+}

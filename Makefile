@@ -22,8 +22,6 @@ run:
 
 # Test the project
 test:
-	VENUS_CONFIG="./config.toml"
-	VENUS_V2RAY_CONFIG="./config.json"
 	$(CARGO) test
 
 # Clean the project
