@@ -3,15 +3,6 @@ use std::{borrow::Cow, path::PathBuf};
 
 use crate::consts::VERSION;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-/// Core subscriptions
-pub struct Subscription {
-    pub name: Cow<'static, str>,
-    pub url: Cow<'static, str>,
-    pub nodes: Vec<Node>,
-}
-
 /// RUA config and frontend global state
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -19,6 +10,7 @@ pub struct VenusConfig {
     pub version: Cow<'static, str>,
     pub subscriptions: Vec<Subscription>,
     pub settings: RUABasicSetting,
+    pub user: Option<RUAUser>,
 }
 impl Default for VenusConfig {
     fn default() -> Self {
@@ -26,8 +18,26 @@ impl Default for VenusConfig {
             version: VERSION.into(),
             subscriptions: vec![],
             settings: RUABasicSetting::default(),
+            user: None,
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RUAUser {
+    username: Cow<'static, str>,
+    /// hashed password
+    password: Cow<'static, str>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+/// Core subscriptions
+pub struct Subscription {
+    pub name: Cow<'static, str>,
+    pub url: Cow<'static, str>,
+    pub nodes: Vec<Node>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

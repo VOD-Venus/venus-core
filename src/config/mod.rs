@@ -20,6 +20,7 @@ pub mod types;
 pub struct Config {
     /// Core config from `config.json`
     pub core: Option<CoreConfig>,
+    /// Venus config from `config.toml`
     pub venus: VenusConfig,
 }
 
