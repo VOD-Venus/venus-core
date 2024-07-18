@@ -190,7 +190,8 @@ pub struct InboundSettings {
     // pub ip: Cow<'static, str>,
     // for dokodemo-door
     // pub address: Option<Cow<'static, str>>,
-    pub allow_transparent: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_transparent: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -412,7 +413,7 @@ pub struct Routing {
     // "AsIs" | "IPIfNonMatch" | "IPOnDemand"
     pub domain_strategy: Cow<'static, str>,
     pub rules: Vec<Rule>,
-    pub balancers: Vec<Balancers>,
+    pub balancers: Option<Vec<Balancers>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

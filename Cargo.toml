@@ -10,3 +10,4 @@ thiserror = "1.0.61"
 toml = "0.8.14"
 serde = { version = "1.0.203", features = ["derive", "serde_derive"] }
 serde_json = { version = "1.0.120" }
+json_comments = "0.2.2"

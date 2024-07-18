@@ -1,4 +1,5 @@
 use error::{ConfigError, ConfigResult};
+use json_comments::StripComments;
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -55,7 +56,8 @@ impl Config {
     pub fn reload_core(&mut self) -> ConfigResult<()> {
         let path = PathBuf::from(get_v2ray_config_path().as_ref());
         let core_file = File::open(path)?;
-        let core_config: CoreConfig = serde_json::from_reader(core_file)?;
+        let stripped = StripComments::new(core_file);
+        let core_config: CoreConfig = serde_json::from_reader(stripped)?;
         self.core = Some(core_config);
         Ok(())
     }
