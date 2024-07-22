@@ -66,10 +66,9 @@ impl Config {
     ///  Write core config to config file
     pub fn write_core(&mut self) -> ConfigResult<()> {
         let path = PathBuf::from(get_v2ray_config_path().as_ref());
-        let config = self
-            .core
-            .as_ref()
-            .ok_or(ConfigError::Empty("v2ray core config is empty".into()))?;
+        let config = self.core.as_ref().ok_or(ConfigError::Empty(
+            "write_core: v2ray core config is empty".into(),
+        ))?;
         let core_file = OpenOptions::new().write(true).open(path)?;
         core_file.set_len(0)?;
         serde_json::to_writer_pretty(&core_file, &config)?;
