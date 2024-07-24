@@ -10,13 +10,11 @@ pub const DEFAULT_VENUS_CONFIG_PATH: &str = "./config.toml";
 /// Read venus config localtion from environment varable `VENUS_CONFIG_PATH`
 pub static VENUS_CONFIG_PATH: OnceLock<Cow<'static, str>> = OnceLock::new();
 pub fn get_venus_config_path() -> &'static Cow<'static, str> {
-    VENUS_CONFIG_PATH.get_or_init(|| match env::var("VENUS_CONFIG") {
-        Ok(var) => var.into(),
-        Err(err) => {
-            warn!("VENUS_CONFIG env not specified: {err}. using default location {DEFAULT_VENUS_CONFIG_PATH}");
-            DEFAULT_VENUS_CONFIG_PATH.into()
-        }
-    })
+    VENUS_CONFIG_PATH.get_or_init(||
+        env::var("VENUS_CONFIG")
+            .map_err(|err| { warn!("VENUS_CONFIG env not specified: {err}. using default location {DEFAULT_VENUS_CONFIG_PATH}"); })
+            .unwrap_or(DEFAULT_VENUS_CONFIG_PATH.into()).into()
+    )
 }
 
 /// Default v2ray config location
@@ -24,12 +22,22 @@ pub const DEFAULT_V2RAY_CONFIG_PATH: &str = "./config.json";
 /// Read v2ray config localtion from environment varable `V2RAY_CONFIG_PATH`
 pub static V2RAY_CONFIG_PATH: OnceLock<Cow<'static, str>> = OnceLock::new();
 pub fn get_v2ray_config_path() -> &'static Cow<'static, str> {
-    V2RAY_CONFIG_PATH.get_or_init(|| match env::var("VENUS_V2RAY_CONFIG") {
-        Ok(var) => var.into(),
-        Err(err) => {
-            warn!("VENUS_V2RAY_CONFIG env not specified: {err}. using default localtion {DEFAULT_V2RAY_CONFIG_PATH}");
-            DEFAULT_V2RAY_CONFIG_PATH.into()
-        }
+    V2RAY_CONFIG_PATH.get_or_init(||
+        env::var("VENUS_V2RAY_CONFIG")
+            .map_err(|err| { warn!("VENUS_V2RAY_CONFIG env not specified: {err}. using default localtion {DEFAULT_V2RAY_CONFIG_PATH}"); })
+            .unwrap_or(DEFAULT_V2RAY_CONFIG_PATH.into()).into()
+    )
+}
+
+/// Default v2ray executable location
+pub const DEFAULT_VENUS_V2RAY_PATH: &str = "./v2ray-core/v2ray";
+/// v2ray core executable binary path
+pub static VENUS_V2RAY_PATH: OnceLock<Cow<'static, str>> = OnceLock::new();
+pub fn get_v2ray_exe_path() -> &'static Cow<'static, str> {
+    VENUS_V2RAY_PATH.get_or_init(|| {
+        env::var("VENUS_V2RAY_PATH")
+            .map_err(|err| { warn!("VENUS_V2RAY_PATH env not specified: {err}. using default localtion {DEFAULT_VENUS_V2RAY_PATH}"); })
+            .unwrap_or(DEFAULT_VENUS_V2RAY_PATH.into()).into()
     })
 }
 
