@@ -1,3 +1,7 @@
+use std::fmt::Display;
+
+use log::error;
+
 use crate::config::error::ConfigError;
 
 #[derive(thiserror::Error, Debug)]
@@ -10,6 +14,11 @@ pub enum VenusError {
     IO(#[from] std::io::Error),
     #[error("venus error {0}")]
     Anyhow(#[from] anyhow::Error),
+}
+
+pub fn log_err<T: Display>(err: T) -> T {
+    error!("{err}");
+    err
 }
 
 pub type VenusResult<T, E = VenusError> = Result<T, E>;

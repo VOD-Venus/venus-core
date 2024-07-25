@@ -1,15 +1,14 @@
 use std::{
-    io::{BufRead, BufReader},
-    process::{Child, Command},
+    io::{self, BufRead, BufReader},
+    process::{Child, Command, Stdio},
     sync::mpsc::{self, Receiver},
     thread,
 };
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Ok as AOk};
 use config::Config;
 use consts::get_v2ray_exe_path;
-use error::VenusResult;
-use log::error;
+use error::{log_err, VenusResult};
 
 pub mod config;
 pub mod consts;
@@ -38,38 +37,59 @@ impl Venus {
 }
 
 impl Venus {
+    /// Spawn a thread to execute v2ray core binary
     pub fn spawn_core(&mut self) -> VenusResult<()> {
         let core_exec_path = get_v2ray_exe_path();
-        let mut child = Command::new(core_exec_path.to_string()).spawn()?;
+        let mut child = Command::new(core_exec_path.to_string())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()?;
 
         let (tx, rx) = mpsc::channel();
         self.child_rx = Some(rx);
 
-        let output = child
-            .stdout
-            .take()
-            .ok_or(anyhow!("todo: child output is missing"))?;
-        thread::spawn(move || {
-            let mut io = BufReader::new(output);
+        let stdout = child.stdout.take().ok_or(io::Error::new(
+            io::ErrorKind::UnexpectedEof,
+            "child std is empty",
+        ))?;
+        let stderr = child.stderr.take().ok_or(anyhow!("todo: "))?;
+        let child_handler = move || {
+            let stdout_tx = tx.clone();
 
-            let mut buf = String::new();
-            loop {
-                match io.read_line(&mut buf) {
-                    Ok(_) => {
-                        if let Err(err) = tx.send(buf.clone()) {
-                            error!("todo: child error {err}");
-                            break;
-                        }
-                    }
-                    Err(err) => {
-                        error!("todo: child error {err}");
-                        break;
-                    }
-                }
-            }
-        });
+            let mut handlers = Vec::with_capacity(2);
+            let stdout_handler = thread::spawn(move || {
+                let mut lines = BufReader::new(stdout).lines();
+                lines.try_for_each(|line| {
+                    stdout_tx.send(line?)?;
+                    AOk(())
+                })?;
+                AOk(())
+            });
+            let stderr_handler = thread::spawn(move || {
+                let mut lines = BufReader::new(stderr).lines();
+                lines.try_for_each(|line| {
+                    tx.send(line?)?;
+                    AOk(())
+                })?;
+                AOk(())
+            });
+
+            handlers.push(stdout_handler);
+            handlers.push(stderr_handler);
+            handlers
+                .into_iter()
+                .try_for_each(|handler| {
+                    handler
+                        .join()
+                        .map_err(|err| anyhow!("child join failed {err:?}"))??;
+                    AOk(())
+                })
+                .map_err(log_err)?;
+            AOk(())
+        };
+        thread::spawn(child_handler);
+
         self.child = Some(child);
-
         Ok(())
     }
 }
