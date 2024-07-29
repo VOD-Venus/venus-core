@@ -8,7 +8,7 @@ use std::{
 use anyhow::{anyhow, Ok as AOk};
 use config::Config;
 use consts::get_v2ray_exe_path;
-use error::{log_err, VenusResult};
+use error::{log_err, VenusError, VenusResult};
 
 pub mod config;
 pub mod consts;
@@ -94,5 +94,15 @@ impl Venus {
 
         self.child = Some(child);
         Ok(())
+    }
+
+    /// Kill core process if exist
+    pub fn kill_core(&mut self) -> VenusResult<()> {
+        if let Some(core) = self.child.as_mut() {
+            core.kill()?;
+            Ok(())
+        } else {
+            Err(VenusError::Core("core not running".into()))
+        }
     }
 }

@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use log::error;
 
@@ -8,6 +8,8 @@ use crate::config::error::ConfigError;
 pub enum VenusError {
     #[error("config error {0}")]
     Config(#[from] ConfigError),
+    #[error("core error {0}")]
+    Core(Cow<'static, str>),
 
     // from
     #[error("venus io error {0}")]
