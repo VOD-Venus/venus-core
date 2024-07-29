@@ -50,9 +50,12 @@ impl Venus {
 
         let stdout = child.stdout.take().ok_or(io::Error::new(
             io::ErrorKind::UnexpectedEof,
-            "child std is empty",
+            "child stdout is empty",
         ))?;
-        let stderr = child.stderr.take().ok_or(anyhow!("todo: "))?;
+        let stderr = child.stderr.take().ok_or(io::Error::new(
+            io::ErrorKind::UnexpectedEof,
+            "child stderr is empty",
+        ))?;
         let child_handler = move || {
             let stdout_tx = tx.clone();
 
