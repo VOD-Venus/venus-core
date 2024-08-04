@@ -105,4 +105,11 @@ impl Venus {
             Err(VenusError::Core("core not running".into()))
         }
     }
+
+    /// Kill core and spawn new one
+    pub fn restart(&mut self) -> VenusResult<()> {
+        self.kill_core()?;
+        self.spawn_core()?;
+        Ok(())
+    }
 }
