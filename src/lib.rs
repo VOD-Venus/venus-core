@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::{anyhow, Ok as AOk};
 use config::Config;
-use consts::get_v2ray_exe_path;
+use consts::VENUS_V2RAY_PATH;
 use error::{log_err, VenusError, VenusResult};
 
 pub mod config;
@@ -39,7 +39,7 @@ impl Venus {
 impl Venus {
     /// Spawn a thread to execute v2ray core binary
     pub fn spawn_core(&mut self) -> VenusResult<()> {
-        let core_exec_path = get_v2ray_exe_path();
+        let core_exec_path = &*VENUS_V2RAY_PATH;
         let mut child = Command::new(core_exec_path.to_string())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

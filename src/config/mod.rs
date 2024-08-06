@@ -9,7 +9,7 @@ use std::{
 };
 use types::{CoreConfig, VenusConfig};
 
-use crate::consts::{get_v2ray_config_path, get_venus_config_path, VERSION};
+use crate::consts::{VENUS_CONFIG_PATH, VERSION};
 
 pub mod error;
 pub mod types;
@@ -38,7 +38,7 @@ impl Config {
     }
 
     pub fn reload_rua(&mut self) -> ConfigResult<()> {
-        let path = PathBuf::from(get_venus_config_path().as_ref());
+        let path = PathBuf::from(VENUS_CONFIG_PATH.as_ref());
         if !path.exists() {
             info!("venus config file not exist, creating default");
             self.write_rua()?;
@@ -55,7 +55,7 @@ impl Config {
 
     /// Reload core config file from VConfig
     pub fn reload_core(&mut self) -> ConfigResult<()> {
-        let path = PathBuf::from(get_v2ray_config_path().as_ref());
+        let path = PathBuf::from(VENUS_CONFIG_PATH.as_ref());
         let core_file = File::open(path)?;
         let stripped = StripComments::new(core_file);
         let core_config: CoreConfig = serde_json::from_reader(stripped)?;
@@ -65,7 +65,7 @@ impl Config {
 
     ///  Write core config to config file
     pub fn write_core(&mut self) -> ConfigResult<()> {
-        let path = PathBuf::from(get_v2ray_config_path().as_ref());
+        let path = PathBuf::from(VENUS_CONFIG_PATH.as_ref());
         let config = self.core.as_ref().ok_or(ConfigError::Empty(
             "write_core: v2ray core config is empty".into(),
         ))?;
@@ -76,7 +76,7 @@ impl Config {
     }
 
     pub fn write_rua(&mut self) -> ConfigResult<()> {
-        let path = PathBuf::from(get_venus_config_path().as_ref());
+        let path = PathBuf::from(VENUS_CONFIG_PATH.as_ref());
         let mut rua_file = OpenOptions::new()
             .write(true)
             .create(true)
