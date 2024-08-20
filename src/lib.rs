@@ -13,12 +13,15 @@ use error::{log_err, VenusError, VenusResult};
 pub mod config;
 pub mod consts;
 pub mod error;
+pub mod message;
 
 #[derive(Debug)]
 pub struct Venus {
     /// v2ray and venus's self config
     pub config: Config,
 
+    /// v2ray version
+    pub version: String,
     /// v2ray process
     pub child: Option<Child>,
     pub child_rx: Option<Receiver<String>>,
@@ -27,9 +30,10 @@ pub struct Venus {
 impl Venus {
     pub fn new() -> VenusResult<Self> {
         let config = Config::new()?;
+
         Ok(Self {
             config,
-
+            version: String::new(),
             child: None,
             child_rx: None,
         })
@@ -39,6 +43,8 @@ impl Venus {
 impl Venus {
     /// Spawn a thread to execute v2ray core binary
     pub fn spawn_core(&mut self) -> VenusResult<()> {
+        self.version = core_version()?;
+
         let core_exec_path = &*VENUS_V2RAY_PATH;
         let mut child = Command::new(core_exec_path.to_string())
             .stdout(Stdio::piped())
@@ -112,4 +118,16 @@ impl Venus {
         self.spawn_core()?;
         Ok(())
     }
+}
+
+/// Detect the v2ray core version
+pub fn core_version() -> VenusResult<String> {
+    let core_exec_path = &*VENUS_V2RAY_PATH;
+    let core = Command::new(core_exec_path.to_string())
+        .args(["version"])
+        .output()?;
+    let output = String::from_utf8_lossy(&core.stdout);
+    let stdout = output.split(' ').collect::<Vec<_>>();
+    let stdout = stdout.get(1).unwrap_or(&"0.0");
+    Ok(stdout.to_string())
 }
