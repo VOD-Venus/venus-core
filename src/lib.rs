@@ -1,7 +1,6 @@
 use std::{
     io::{self, BufRead, BufReader},
     process::{Child, Command, Stdio},
-    sync::mpsc::{self, Receiver},
     thread,
 };
 
@@ -9,6 +8,7 @@ use anyhow::{anyhow, Ok as AOk};
 use config::Config;
 use consts::VENUS_V2RAY_PATH;
 use error::{log_err, VenusError, VenusResult};
+use message::{Message, MessageType};
 
 pub mod config;
 pub mod consts;
@@ -23,19 +23,21 @@ pub struct Venus {
     /// v2ray version
     pub version: String,
     /// v2ray process
-    pub child: Option<Child>,
-    pub child_rx: Option<Receiver<String>>,
+    child: Option<Child>,
+
+    /// message
+    message: Message,
 }
 
 impl Venus {
-    pub fn new() -> VenusResult<Self> {
+    pub fn new(message: Message) -> VenusResult<Self> {
         let config = Config::new()?;
 
         Ok(Self {
             config,
             version: String::new(),
             child: None,
-            child_rx: None,
+            message,
         })
     }
 }
@@ -51,8 +53,9 @@ impl Venus {
             .stderr(Stdio::piped())
             .spawn()?;
 
-        let (tx, rx) = mpsc::channel();
-        self.child_rx = Some(rx);
+        // let (tx, rx) = mpsc::channel();
+        // self.child_rx = Some(rx);
+        let Message { tx, .. } = &self.message;
 
         let stdout = child.stdout.take().ok_or(io::Error::new(
             io::ErrorKind::UnexpectedEof,
@@ -62,22 +65,23 @@ impl Venus {
             io::ErrorKind::UnexpectedEof,
             "child stderr is empty",
         ))?;
+        let tx = tx.clone();
         let child_handler = move || {
             let stdout_tx = tx.clone();
-
             let mut handlers = Vec::with_capacity(2);
             let stdout_handler = thread::spawn(move || {
                 let mut lines = BufReader::new(stdout).lines();
                 lines.try_for_each(|line| {
-                    stdout_tx.send(line?)?;
+                    stdout_tx.send(MessageType::Core(line?))?;
                     AOk(())
                 })?;
                 AOk(())
             });
+            let stderr_tx = tx.clone();
             let stderr_handler = thread::spawn(move || {
                 let mut lines = BufReader::new(stderr).lines();
                 lines.try_for_each(|line| {
-                    tx.send(line?)?;
+                    stderr_tx.send(MessageType::Core(line?))?;
                     AOk(())
                 })?;
                 AOk(())
@@ -106,6 +110,7 @@ impl Venus {
     pub fn kill_core(&mut self) -> VenusResult<()> {
         if let Some(core) = self.child.as_mut() {
             core.kill()?;
+            self.child = None;
             Ok(())
         } else {
             Err(VenusError::Core("core not running".into()))
