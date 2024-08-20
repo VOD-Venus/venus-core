@@ -1,6 +1,7 @@
 use std::{
     io::{self, BufRead, BufReader},
     process::{Child, Command, Stdio},
+    sync::mpsc::Sender,
     thread,
 };
 
@@ -8,7 +9,7 @@ use anyhow::{anyhow, Ok as AOk};
 use config::Config;
 use consts::VENUS_V2RAY_PATH;
 use error::{log_err, VenusError, VenusResult};
-use message::{Message, MessageType};
+use message::MessageType;
 
 pub mod config;
 pub mod consts;
@@ -26,18 +27,18 @@ pub struct Venus {
     child: Option<Child>,
 
     /// message
-    message: Message,
+    message_tx: Sender<MessageType>,
 }
 
 impl Venus {
-    pub fn new(message: Message) -> VenusResult<Self> {
+    pub fn new(message_tx: Sender<MessageType>) -> VenusResult<Self> {
         let config = Config::new()?;
 
         Ok(Self {
             config,
             version: String::new(),
             child: None,
-            message,
+            message_tx,
         })
     }
 }
@@ -53,9 +54,7 @@ impl Venus {
             .stderr(Stdio::piped())
             .spawn()?;
 
-        // let (tx, rx) = mpsc::channel();
-        // self.child_rx = Some(rx);
-        let Message { tx, .. } = &self.message;
+        let tx = &self.message_tx;
 
         let stdout = child.stdout.take().ok_or(io::Error::new(
             io::ErrorKind::UnexpectedEof,
