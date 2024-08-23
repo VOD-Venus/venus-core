@@ -1,5 +1,7 @@
 use std::{
+    env,
     io::{self, BufRead, BufReader},
+    path::PathBuf,
     process::{Child, Command, Stdio},
     sync::mpsc::Sender,
     thread,
@@ -34,6 +36,9 @@ impl Venus {
     pub fn new(message_tx: Sender<MessageType>) -> VenusResult<Self> {
         let config = Config::new()?;
 
+        let asset_path = PathBuf::from(VENUS_V2RAY_PATH.as_ref());
+        env::set_var("V2RAY_LOCATION_ASSET", asset_path);
+
         Ok(Self {
             config,
             version: String::new(),
@@ -48,8 +53,9 @@ impl Venus {
     pub fn spawn_core(&mut self) -> VenusResult<()> {
         self.version = core_version()?;
 
-        let core_exec_path = &*VENUS_V2RAY_PATH;
-        let mut child = Command::new(core_exec_path.to_string())
+        let core_exec_path = format!("{}/v2ray", &*VENUS_V2RAY_PATH);
+        let mut child = Command::new(core_exec_path)
+            .args(["run"])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()?;
@@ -126,10 +132,8 @@ impl Venus {
 
 /// Detect the v2ray core version
 pub fn core_version() -> VenusResult<String> {
-    let core_exec_path = &*VENUS_V2RAY_PATH;
-    let core = Command::new(core_exec_path.to_string())
-        .args(["version"])
-        .output()?;
+    let core_exec_path = format!("{}/v2ray", &*VENUS_V2RAY_PATH);
+    let core = Command::new(core_exec_path).args(["version"]).output()?;
     let output = String::from_utf8_lossy(&core.stdout);
     let stdout = output.split(' ').collect::<Vec<_>>();
     let stdout = stdout.get(1).unwrap_or(&"0.0");

@@ -9,6 +9,6 @@ anyhow = "1.0.86"
 log = "0.4.22"
 thiserror = "1.0.63"
 toml = "0.8.19"
-serde = { version = "1.0.204", features = ["derive", "serde_derive"] }
-serde_json = { version = "1.0.122" }
+serde = { version = "1.0.208", features = ["derive", "serde_derive"] }
+serde_json = { version = "1.0.125" }
 json_comments = "0.2.2"

@@ -9,7 +9,7 @@ use std::{
 };
 use types::{CoreConfig, VenusConfig};
 
-use crate::consts::{V2RAY_CONFIG_PATH, VENUS_CONFIG_PATH, VERSION};
+use crate::consts::{VENUS_CONFIG_PATH, VENUS_V2RAY_PATH, VERSION};
 
 pub mod error;
 pub mod types;
@@ -55,7 +55,8 @@ impl Config {
 
     /// Reload core config file from VConfig
     pub fn reload_core(&mut self) -> ConfigResult<()> {
-        let path = PathBuf::from(V2RAY_CONFIG_PATH.as_ref());
+        let path = format!("{}/config.json", &*VENUS_V2RAY_PATH);
+        let path = PathBuf::from(path);
         let core_file = File::open(path)?;
         let stripped = StripComments::new(core_file);
         let core_config: CoreConfig = serde_json::from_reader(stripped)?;
@@ -65,7 +66,8 @@ impl Config {
 
     ///  Write core config to config file
     pub fn write_core(&mut self) -> ConfigResult<()> {
-        let path = PathBuf::from(V2RAY_CONFIG_PATH.as_ref());
+        let path = format!("{}/config.json", &*VENUS_V2RAY_PATH);
+        let path = PathBuf::from(path);
         let config = self.core.as_ref().ok_or(ConfigError::Empty(
             "write_core: v2ray core config is empty".into(),
         ))?;
