@@ -33,15 +33,15 @@ mod tests {
 
     #[test]
     fn test_get_venus_config_path() {
-        env::set_var("VENUS_CONFIG", "./config/config.toml");
+        env::set_var("VENUS_CONFIG", "./config.toml");
         let venus_path = &*VENUS_CONFIG_PATH;
-        assert_eq!("./config/config.toml", venus_path);
+        assert_eq!("./config.toml", venus_path);
     }
 
     #[test]
     fn test_get_v2ray_config_path() {
-        env::set_var("VENUS_V2RAY_CONFIG", "./config/config.json");
-        let venus_path = &*VENUS_CONFIG_PATH;
-        assert_eq!("./config/config.json", venus_path);
+        env::set_var("VENUS_V2RAY_PATH", "./v2ray-core/");
+        let venus_path = &*VENUS_V2RAY_PATH;
+        assert_eq!("./v2ray-core/", venus_path);
     }
 }
