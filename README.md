@@ -4,12 +4,19 @@
 
 ## Design
 
-After process spawnned we will create a `mpsc::channel` to pipe `stdio` into the channel.
+The instances will accept a `mpsc::channel` Sender as core `stdio` messenger and pipe it into the channel.
 
 ## Example
 
 ```rust
-let mut venus = venus.lock()?;
+let mut venus = match Venus::new(msg.0.clone()) {
+    Ok(v) => v,
+    Err(err) => {
+        error!("cannot initialize venus core {err}");
+        exit(1);
+    }
+};
+
 venus
     .config
     .reload_rua()
@@ -23,15 +30,24 @@ venus
     .write_core()
     .with_context(|| "write core configuration failed")?;
 venus.spawn_core().with_context(|| "staring core failed")?;
-let child_rx = venus
-    .child_rx
-    .take()
-    .ok_or(anyhow!("get child rx failed"))?;
+// global message handler
 thread::spawn(move || {
-    let core_span = span!(Level::INFO, "core").entered();
+    let lock = &MSG.lock();
+    let child_rx = match lock {
+        Ok(msg) => &msg.1,
+        Err(err) => {
+            error!("lock message failed {err}");
+            return;
+        }
+    };
     while let Ok(msg) = child_rx.recv() {
-        info!("{msg}");
+        match msg {
+            MessageType::Core(msg) => {
+                let core_span = span!(Level::INFO, "CORE").entered();
+                info!("{msg}");
+                core_span.exit();
+            }
+        }
     }
-    core_span.exit();
 });
 ```
