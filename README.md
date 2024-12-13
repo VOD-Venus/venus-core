@@ -1,3 +1,5 @@
+Moved to https://github.com/VOD-Venus/venus/tree/master/venus-core
+
 # Venus core
 
 [Venus](https://github.com/VOD-Venus/venus) core library. Spawn v2ray core as a child process and controls its configs.
